@@ -119,8 +119,8 @@ private:
 };
 
 /*
-    Low-> |    16b    |    16b     |       32b       | <-High
-          | archetype | generation |      index      |
+    High-> |    16b    |    16b     |       32b       | <-Low
+           | archetype | generation |      index      |
 */
 using ComponentIndex = uint64_t;
 using ArchetypeIndex = uint16_t;
