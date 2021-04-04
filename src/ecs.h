@@ -10,14 +10,39 @@
 namespace ecs {
 
 using ComponentStorage = void *;
+using IDType = uint64_t;
+
+template <typename IDDomainType>
+struct UUID {
+    static IDType id_counter;
+
+    template <typename ItemType>
+    static const IDType get() {
+        static IDType id = id_counter++;
+        return id;
+    }
+
+    static const IDType generate() {
+        return id_counter++;
+    }
+};
+
+template<typename T>
+IDType UUID<T>::id_counter = 0;
+
 
 enum ComponentTypeTag {
     Geometry, Visual, UserController
 };
 
+struct Component { };
 template <typename T>
-struct ComponentBase {
+struct ComponentBase: public Component {
     static const ComponentTypeTag type_tag;
+    
+    static const IDType uuid() {
+        return UUID<Component>::get<T>();
+    }
 };
 
 struct CompGeometry : public ComponentBase<CompGeometry> {
@@ -149,23 +174,35 @@ struct ComponentIndexView {
 
 class Archetype {
 public:
-    Archetype(ComponentProvider &provider) : m_provider(provider) { }
+    Archetype(ComponentProvider &provider)
+        : m_components {}
+        , m_provider {provider}
+        , m_uuid {UUID<Archetype>::generate()}
+    {
+    }
+
     template <typename T>
     void register_component() {
-        auto iter = components.find(std::type_index(typeid(T)));
-        if (iter != components.end()) return;   // already registered
-        components[std::type_index(typeid(T))] = m_provider.make_component_store<T>();
+        auto iter = m_components.find(std::type_index(typeid(T)));
+        if (iter != m_components.end()) return;   // already registered
+        m_components[std::type_index(typeid(T))] = m_provider.make_component_store<T>();
     }
 
     template <typename T>
     std::vector<T> *get_component_vector() {
-        auto iter = components.find(std::type_index(typeid(T)));
-        if (iter == components.end()) return nullptr;
+        auto iter = m_components.find(std::type_index(typeid(T)));
+        if (iter == m_components.end()) return nullptr;
         return static_cast<std::vector<T>*>(iter->second);
     }
+
+    IDType uuid() {
+        return m_uuid;
+    };
+
 private:
-    std::unordered_map<std::type_index, void*> components;
+    std::unordered_map<std::type_index, void*> m_components;
     ComponentProvider &m_provider;
+    IDType m_uuid;
 };
 
 class ComponentManager {

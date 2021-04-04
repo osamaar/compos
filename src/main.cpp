@@ -3,6 +3,12 @@
 #include <vector>
 #include <typeindex>
 
+int I = 0;
+
+int fn() {
+    static int i = I++;
+    return i;
+}
 
 int main() {
     using namespace ecs;
@@ -35,6 +41,17 @@ int main() {
     );
 
     assert(arche.get_component_vector<CompUserController>() == nullptr);
+
+    IDType c0 = CompGeometry::uuid();
+    IDType c1 = CompVisual::uuid();
+    IDType c2 = CompUserController::uuid();
+
+    IDType compcount = UUID<Component>::id_counter;
+
+    IDType a0 = arche.uuid();
+    IDType a1 = arche1.uuid();
+
+    IDType archecount = UUID<Archetype>::id_counter;
     
     return 0;
 }
