@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <unordered_map>
-#include <typeindex>
 #include <memory>
 #include <cstdio>
 
@@ -57,8 +56,6 @@ struct VecWrapperBase {
 template <typename T>
 struct VecWrapper: public VecWrapperBase {
     std::vector<T> inner;
-    virtual ~VecWrapper() { printf("deleting VecWrapper: %llu\n", typeid(T).hash_code()
-    );}
 };
 
 class ComponentProvider {
@@ -68,7 +65,7 @@ public:
         VecWrapper<std::vector<T>> *type_container = get_type_container<T>();
         if (!type_container) {
             type_container = new VecWrapper<std::vector<T>>;
-            m_type_containers[std::type_index(typeid(T))] = type_container;
+            m_type_containers[T::uuid()] = type_container;
         }
         
         type_container->inner.emplace_back();
@@ -81,11 +78,11 @@ public:
         }
     }
 private:
-    std::unordered_map<std::type_index, VecWrapperBase *> m_type_containers;
+    std::unordered_map<IDType, VecWrapperBase *> m_type_containers;
 
     template <typename T>
     VecWrapper<std::vector<T>> *get_type_container() {
-        auto iter = m_type_containers.find(std::type_index(typeid(T)));
+        auto iter = m_type_containers.find(T::uuid());
         if (iter == m_type_containers.end()) return nullptr;
         return static_cast<VecWrapper<std::vector<T>>*>(iter->second);
     }
@@ -131,14 +128,14 @@ public:
 
     template <typename T>
     void register_component() {
-        auto iter = m_components.find(std::type_index(typeid(T)));
+        auto iter = m_components.find(T::uuid());
         if (iter != m_components.end()) return;   // already registered
-        m_components[std::type_index(typeid(T))] = m_provider.make_component_store<T>();
+        m_components[T::uuid()] = m_provider.make_component_store<T>();
     }
 
     template <typename T>
     std::vector<T> *get_component_vector() {
-        auto iter = m_components.find(std::type_index(typeid(T)));
+        auto iter = m_components.find(T::uuid());
         if (iter == m_components.end()) return nullptr;
         return static_cast<std::vector<T>*>(iter->second);
     }
@@ -148,7 +145,7 @@ public:
     };
 
 private:
-    std::unordered_map<std::type_index, void*> m_components;
+    std::unordered_map<IDType, void*> m_components;
     ComponentProvider &m_provider;
     IDType m_uuid;
 };
