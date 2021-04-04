@@ -30,16 +30,9 @@ struct UUID {
 template<typename T>
 IDType UUID<T>::id_counter = 0;
 
-
-enum ComponentTypeTag {
-    Geometry, Visual, UserController
-};
-
 struct Component { };
 template <typename T>
 struct ComponentBase: public Component {
-    static const ComponentTypeTag type_tag;
-    
     static const IDType uuid() {
         return UUID<Component>::get<T>();
     }
@@ -50,57 +43,12 @@ struct CompGeometry : public ComponentBase<CompGeometry> {
 };
 
 struct CompVisual : public ComponentBase<CompVisual> {
-    static const ComponentTypeTag type_tag;
 
 };
 
 struct CompUserController : public ComponentBase<CompUserController> {
-    static const ComponentTypeTag type_tag;
 
 };
-
-// Componenet subclasses type tag definitions
-const ComponentTypeTag CompGeometry::type_tag = ComponentTypeTag::Geometry;
-const ComponentTypeTag CompVisual::type_tag = ComponentTypeTag::Visual;
-const ComponentTypeTag CompUserController::type_tag = ComponentTypeTag::UserController;
-// --------------------------------------------
-
-// struct Archetype {
-//     struct Record {
-//         ComponentTypeTag type_tag;
-//         ComponentStorage component_store;
-//     };
-
-//     std::vector<Record> component_collection;
-
-//     template <typename T>
-//     void add_type(std::vector<T> *comp_vec) {
-//         component_collection.emplace_back(Record{ T::type_tag, comp_vec });
-//     }
-
-//     template <typename T>
-//     std::vector<T> *get_component_vector() {
-//         for(auto &&record : component_collection) {
-//             if (record.type_tag != T::type_tag) continue;
-//             return static_cast<std::vector<T>*>(record.component_store);
-//         }
-//         return nullptr;
-//     }
-// };
-
-// class ComponentContainer {
-// public:
-//     template <typename T>
-//     ComponentContainer() : m_vec{ std::vector<T> } { }
-
-//     template <typename T>
-//     void get_vec() {
-//         return static_cast<T>(m_vec);
-//     }
-
-// private:
-//     void *m_vec;
-// };
 
 struct VecWrapperBase {
     virtual ~VecWrapperBase() = default;
