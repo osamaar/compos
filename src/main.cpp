@@ -10,31 +10,48 @@ int fn() {
     return i;
 }
 
+// int test() {
+//     using namespace ecs;
+
+//     ComponentProvider provider;
+//     Archetype arche {provider};
+//     Archetype arche1 {provider};
+
+//     arche.add_component<CompGeometry>();
+//     arche.add_component<CompGeometry>();
+//     arche.add_component<CompVisual>();
+
+//     arche1.add_component<CompGeometry>();
+//     arche1.add_component<CompVisual>();
+//     arche1.add_component<CompUserController>();
+
+//     IDType c0 = CompGeometry::uuid();
+//     IDType c1 = CompVisual::uuid();
+//     IDType c2 = CompUserController::uuid();
+
+//     IDType compcount = UUID<Component>::id_counter;
+
+//     IDType a0 = arche.uuid();
+//     IDType a1 = arche1.uuid();
+
+//     IDType archecount = UUID<Archetype>::id_counter;
+    
+//     return 0;
+// }
+
 int main() {
     using namespace ecs;
 
-    ComponentProvider provider;
-    Archetype arche {provider};
-    Archetype arche1 {provider};
+    ComponentManager cm;
+    cm.register_component<CompGeometry>();
+    cm.register_component<CompVisual>();
+    cm.register_component<CompUserController>();
 
-    arche.add_component<CompGeometry>();
-    arche.add_component<CompGeometry>();
-    arche.add_component<CompVisual>();
+    auto ent0 = cm.create_entity<CompGeometry, CompVisual>();
+    auto ent1 = cm.create_entity<CompUserController, CompGeometry>();
 
-    arche1.add_component<CompGeometry>();
-    arche1.add_component<CompVisual>();
-    arche1.add_component<CompUserController>();
-
-    IDType c0 = CompGeometry::uuid();
-    IDType c1 = CompVisual::uuid();
-    IDType c2 = CompUserController::uuid();
-
-    IDType compcount = UUID<Component>::id_counter;
-
-    IDType a0 = arche.uuid();
-    IDType a1 = arche1.uuid();
-
-    IDType archecount = UUID<Archetype>::id_counter;
-    
+    auto ent2 = cm.create_entity<CompGeometry, CompVisual>();
+    // auto ent3 = cm.create_entity<CompGeometry, CompVisual>();
+    // auto ent4 = cm.create_entity<CompGeometry, CompVisual>();
     return 0;
 }
