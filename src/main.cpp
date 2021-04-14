@@ -47,10 +47,10 @@ int main() {
     cm.register_component<CompVisual>();
     cm.register_component<CompUserController>();
 
-    auto ent0 = cm.create_entity<CompGeometry, CompVisual>();
-    auto ent1 = cm.create_entity<CompUserController, CompGeometry>();
+    EntityID ent0 = cm.create_entity<CompGeometry, CompVisual>();
+    EntityID ent1 = cm.create_entity<CompUserController, CompGeometry>();
 
-    auto ent2 = cm.create_entity<CompGeometry, CompVisual>();
+    EntityID ent2 = cm.create_entity<CompGeometry, CompVisual>();
     // auto ent3 = cm.create_entity<CompGeometry, CompVisual>();
     // auto ent4 = cm.create_entity<CompGeometry, CompVisual>();
     return 0;
