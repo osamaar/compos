@@ -51,6 +51,7 @@ int main() {
     EntityID ent1 = cm.create_entity<CompUserController, CompGeometry>();
 
     EntityID ent2 = cm.create_entity<CompGeometry, CompVisual>();
+    EntityID ent3 = cm.create_entity<CompUserController, CompGeometry>();
     // auto ent3 = cm.create_entity<CompGeometry, CompVisual>();
     // auto ent4 = cm.create_entity<CompGeometry, CompVisual>();
     return 0;
