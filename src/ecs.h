@@ -444,7 +444,7 @@ public:
         fp.append(Arg0::uuid());
         Archetype &a = get_archetype(fp);
         EntityIndex idx = a.create_entity();
-        return EntityIDView(idx, 0, a.uuid()).to_u64();
+        return EntityIDView(idx, 0xffff, a.uuid()).to_u64();
     }
 
     // Returns the archetype matching fingerprint. Creates it if needed.
