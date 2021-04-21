@@ -39,6 +39,33 @@ int fn() {
 //     return 0;
 // }
 
+// struct Component {
+// };
+// template <typename T>
+// struct ComponentBase: public Component {
+//     static const IDType uuid() {
+//         return UUID<Component>::get<T>();
+//     }
+
+//     // template <typename... Args>
+//     // static void construct(void *memory, Args... args) {
+//     //     ::new (memory) T{std::forward(args)...};
+//     // }
+// };
+
+// struct CompGeometry : public ComponentBase<CompGeometry> {
+struct CompGeometry {
+    int x; int y;
+};
+
+struct CompVisual {
+
+};
+
+struct CompUserController {
+
+};
+
 int main() {
     using namespace ecs;
 

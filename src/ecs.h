@@ -36,6 +36,9 @@ struct UUID {
     }
 };
 
+// A marker class to use for UUID counting.
+class Component {};
+
 // template <typename IDDomainType, typename ItemType>
 // IDType uuidof() {
 //     return UUID<IDDomainType>::get<ItemType>();
@@ -59,32 +62,6 @@ template <typename T>
 void destroy_object(void *memory) {
     static_cast<T*>(memory)->~T();
 }
-
-struct Component {
-};
-template <typename T>
-struct ComponentBase: public Component {
-    static const IDType uuid() {
-        return UUID<Component>::get<T>();
-    }
-
-    // template <typename... Args>
-    // static void construct(void *memory, Args... args) {
-    //     ::new (memory) T{std::forward(args)...};
-    // }
-};
-
-struct CompGeometry : public ComponentBase<CompGeometry> {
-    int x; int y;
-};
-
-struct CompVisual : public ComponentBase<CompVisual> {
-
-};
-
-struct CompUserController : public ComponentBase<CompUserController> {
-
-};
 
 // struct VecWrapperBase {
 //     virtual ~VecWrapperBase() = default;
@@ -411,7 +388,8 @@ public:
         meta.size = sizeof(T);
         meta.construct = &construct_object<T>;
         meta.destroy = &destroy_object<T>;
-        m_component_metadata[T::uuid()] = meta;
+        // m_component_metadata[T::uuid()] = meta;
+        m_component_metadata[UUID<Component>::get<T>()] = meta;
     }
 
     // IDType create_entity(const ArchetypeFingerprint &fingerprint) {
@@ -435,13 +413,15 @@ public:
 
     template <typename Arg0, typename Arg1, typename... Args>
     EntityID build_entity(ArchetypeFingerprint &fp) {
-        fp.append(Arg0::uuid());
+        // fp.append(Arg0::uuid());
+        fp.append(UUID<Component>::get<Arg0>());
         return build_entity<Arg1, Args...>(fp);
     }
 
     template <typename Arg0>
     EntityID build_entity(ArchetypeFingerprint &fp) {
-        fp.append(Arg0::uuid());
+        // fp.append(Arg0::uuid());
+        fp.append(UUID<Component>::get<Arg0>());
         Archetype &a = get_archetype(fp);
         EntityIndex idx = a.create_entity();
         return EntityIDView(idx, 0xffff, a.uuid()).to_u64();
