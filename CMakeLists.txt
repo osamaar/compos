@@ -9,6 +9,11 @@ set(
     src/main.cpp
 )
 
+set(
+    bench_src
+    src/benchmark.cpp
+)
+
 # use dynamic wx
 # add_compile_definitions(WXUSINGDLL)
 
@@ -23,6 +28,7 @@ set(
 # endif()
 
 add_executable(demo ${sources})
+add_executable(benchmark ${bench_src})
 # target_link_libraries(wxfractal wx::core wx::base wx::net)
 
 # set_property(TARGET wxfractal PROPERTY
