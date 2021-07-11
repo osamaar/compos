@@ -20,7 +20,6 @@ using ComponentStorage = void *;
 using ConstructItemFunc = void (*)(void*);
 using DestroyItemFunc = void (*)(void*);
 
-
 template <typename IDDomainType>
 struct UUID {
     static IDType id_counter;
@@ -263,9 +262,15 @@ struct EntityIDView {
 struct ArchetypeFingerprint {
     std::set<IDType> type_ids;
 
+    ArchetypeFingerprint(std::initializer_list<IDType> ids)
+        : type_ids{ids}
+    { 
+
+    }
+
     // Component-wise equality.
     bool operator ==(const ArchetypeFingerprint &other) const {
-        if (type_ids.size() != type_ids.size()) return false;
+        if (type_ids.size() != other.type_ids.size()) return false;
 
         auto iter_this = type_ids.begin();
         auto iter_that = other.type_ids.begin();
@@ -286,6 +291,7 @@ struct ArchetypeFingerprint {
 
     void clear() { type_ids.clear(); }
     void append(IDType id) { type_ids.insert(id); }
+    size_t size() const { return type_ids.size(); }
 };
 
 struct ArchetypeFingerprintHasher {
@@ -311,16 +317,15 @@ public:
             // UntypedVector &vec = *static_cast<UntypedVector*>(comp.second);
             // printf("\tcomp[%x] = <%x>\n", comp.first, comp.second);
             UntypedVector &vec = *m_provider.get_component_store(comp.first, comp.second);
-            size_t s = vec.size();
             vec.emplace_back_default();
-            s = vec.size();
-            s = vec.size();
         }
 
         m_size++;
 
         return (m_size - 1);
     }
+
+    size_t size() const { return m_size; }
 
     // template <typename T>
     // void add_component() {
@@ -342,7 +347,7 @@ public:
         return m_provider.get_component_store(type_id, iter->second);
     }
 
-    IDType uuid() {
+    IDType uuid() const {
         return m_uuid;
     };
 
@@ -361,10 +366,11 @@ public:
         return true;
     }
 
-    const ArchetypeFingerprint &fingerprint() {
-        m_fingerprint.clear();
-        for (auto &&iter: m_components) {
-            m_fingerprint.append(iter.first);
+    const ArchetypeFingerprint &fingerprint() const {
+        auto p = const_cast<Archetype*>(this);
+        p->m_fingerprint.clear();
+        for (auto &&iter: p->m_components) {
+            p->m_fingerprint.append(iter.first);
         }
         return m_fingerprint;
     }
@@ -379,6 +385,12 @@ private:
 
 class ComponentManager {
 public:
+    using ArchetypeTable = std::unordered_map<
+        ArchetypeFingerprint, Archetype,
+        ArchetypeFingerprintHasher
+    >;
+    using ComponentMetadataTable  = std::unordered_map<IDType, TypeMetadata>;
+
     ComponentManager() = default;
     ~ComponentManager() = default;
 
@@ -405,11 +417,19 @@ public:
 
     // struct EntityBuilder {};
 
-    template <typename Arg0, typename... Args>
+    template <typename... Args>
     EntityID create_entity() {
-        ArchetypeFingerprint fp;
-        return build_entity<Arg0, Args...>(fp);
+        ArchetypeFingerprint fp { UUID<Component>::get<Args>()... };
+        Archetype &a = get_archetype(fp);
+        EntityIndex idx = a.create_entity();
+        return EntityIDView(idx, 0xffff, a.uuid()).to_u64();
     }
+
+    // template <typename Arg0, typename... Args>
+    // EntityID create_entity() {
+    //     ArchetypeFingerprint fp;
+    //     return build_entity<Arg0, Args...>(fp);
+    // }
 
     template <typename Arg0, typename Arg1, typename... Args>
     EntityID build_entity(ArchetypeFingerprint &fp) {
@@ -441,15 +461,20 @@ public:
 
         return a;
     }
-private:
-    using ArchetypeTable = std::unordered_map<
-        ArchetypeFingerprint, Archetype,
-        ArchetypeFingerprintHasher
-    >;
 
+    const ComponentProvider&
+    component_provider() const { return m_provider; }
+
+    const ArchetypeTable&
+    archetype_table() const { return m_archetypes; }
+
+    const ComponentMetadataTable&
+    component_metadata() const { return m_component_metadata; }
+
+private:
     ComponentProvider m_provider;
     ArchetypeTable m_archetypes;
-    std::unordered_map<IDType, TypeMetadata> m_component_metadata;
+    ComponentMetadataTable m_component_metadata;
 };
 
 }

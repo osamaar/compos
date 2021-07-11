@@ -1,38 +1,17 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 11)
-
 project(ecs CXX)
+add_library(ecs INTERFACE)
+target_include_directories(ecs INTERFACE include)
+add_subdirectory(vendor/fmt)
 
-set(
-    sources
-    src/main.cpp
-)
+set(demo_src src/main.cpp)
+set(bench_src src/benchmark.cpp)
 
-set(
-    bench_src
-    src/benchmark.cpp
-)
+add_executable(demo ${demo_src})
+target_link_libraries(demo ecs fmt::fmt)
 
-# use dynamic wx
-# add_compile_definitions(WXUSINGDLL)
-
-# use static wx
-#set(wxBUILD_SHARED OFF CACHE BOOL "use static wx" FORCE)
-
-# add_subdirectory(vendor/wxWidgets)
-# add_executable(wxfractal WIN32 ${sources})
-
-# if(MSVC)
-# 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
-# endif()
-
-add_executable(demo ${sources})
 add_executable(benchmark ${bench_src})
-# target_link_libraries(wxfractal wx::core wx::base wx::net)
-
-# set_property(TARGET wxfractal PROPERTY
-#   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
-# set_property(TARGET wxfractal PROPERTY
-#   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+target_link_libraries(benchmark ecs)
+target_link_libraries(benchmark fmt::fmt)
