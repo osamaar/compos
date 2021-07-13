@@ -7,7 +7,7 @@ template <>
 struct fmt::formatter<ecs::ComponentManager> : fmt::formatter<fmt::string_view> {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(const ecs::ComponentManager &cm, FormatContext &ctx) {
+    auto format(const ecs::ComponentManager &cm, FormatContext &ctx) -> decltype(ctx.out()) {
         string_view name = "unknown";
         fmt::format_to(ctx.out(), "<");
         fmt::format_to(
@@ -28,7 +28,7 @@ template <>
 struct fmt::formatter<ecs::Archetype> : fmt::formatter<fmt::string_view> {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(const ecs::Archetype &a, FormatContext &ctx) {
+    auto format(const ecs::Archetype &a, FormatContext &ctx) -> decltype(ctx.out()) {
         string_view name = "unknown";
         fmt::format_to(ctx.out(), "<");
         fmt::format_to(ctx.out(), "Archetype {}: {} Components ( ", a.uuid(), a.fingerprint().size());

@@ -193,7 +193,7 @@ public:
     // }
 
     size_t make_component_store(IDType type_id, const TypeMetadata &metadata) {
-        auto &found = m_type_containers.find(type_id);
+        const auto &found = m_type_containers.find(type_id);
         if (found == m_type_containers.end()) {
             m_type_containers.emplace(type_id, TypeContainer{});
         }
@@ -250,9 +250,9 @@ struct EntityIDView {
 
     static EntityIDView from_u64(EntityID idx) {
         return {
-            idx & 0xffffffff,
-            (idx >> 32) & 0xffffull,
-            (idx >> 48) & 0xffffull
+            (uint32_t)(idx & 0xffffffff),
+            (uint16_t)((idx >> 32) & 0xffffull),
+            (uint16_t)((idx >> 48) & 0xffffull)
         };
     }
 };

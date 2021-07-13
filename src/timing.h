@@ -2,7 +2,7 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #define TIMING_ON_WIN
-#elif defined(__UNIX__) || defined(__APPLE__)
+#elif defined(__unix__) || defined(__APPLE__)
 #define TIMING_ON_UNIX
 #endif
 
@@ -16,7 +16,8 @@ extern "C" {
 #if defined(TIMING_ON_WIN)
 typedef int64_t tickcount_t;
 #elif defined(TIMING_ON_UNIX)
-typedef struct timespect *tickcount_t;
+#include <time.h>
+typedef struct timespec tickcount_t;
 #else
 #  error Unknown platform. Unable to use high-resolution processor counter.
 #endif
@@ -45,14 +46,23 @@ inline int64_t timing_timediff(tickcount_t start, tickcount_t end) {
 }
 
 #elif defined(TIMING_ON_UNIX)
-#include <time.h>
-
-inline int64_t timing_getticks() {
-    return 0;
+inline tickcount_t timing_getticks() {
+    timespec temp;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &temp);;
+    return  temp;
 }
 
-inline int64_t timing_timediff(int64_t start, int64_t end) {
-    return end - start;
+inline int64_t timing_timediff(tickcount_t start, tickcount_t end) {
+    //return (end.tv_nsec - start.tv_nsec)*1000;
+    timespec temp;
+    if ((end.tv_nsec-start.tv_nsec)<0) {
+        temp.tv_sec = end.tv_sec-start.tv_sec-1;
+        temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+    } else {
+        temp.tv_sec = end.tv_sec-start.tv_sec;
+        temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+    }
+    return temp.tv_sec*1000000 + temp.tv_nsec/1000;
 }
 
 #endif
