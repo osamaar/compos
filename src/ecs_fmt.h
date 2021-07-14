@@ -38,7 +38,7 @@ struct fmt::formatter<ecs::Archetype> : fmt::formatter<fmt::string_view> {
         }
 
         fmt::format_to(ctx.out(), ")");
-        return fmt::format_to(ctx.out(), " - {} entities", a.size());
+        fmt::format_to(ctx.out(), " - {} entities", a.size());
         return fmt::format_to(ctx.out(), ">");
     }
 };
