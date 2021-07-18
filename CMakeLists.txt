@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 11)
 project(ecs CXX)
 add_library(ecs INTERFACE)
 target_include_directories(ecs INTERFACE include)
-add_subdirectory(vendor/fmt)
+add_subdirectory(vendor/fmt EXCLUDE_FROM_ALL)
 
 set(demo_src src/main.cpp)
 set(bench_src src/benchmark.cpp)
