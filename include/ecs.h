@@ -14,7 +14,8 @@ namespace ecs {
 using IDType = uint32_t;
 using EntityIndex = uint32_t;
 using ArchetypeIndex = uint16_t;
-using EntityID = uint64_t;
+using EntityLocation = uint64_t;    // Combines ArchetypeIndex & EntityIndex
+using EntityID = uint64_t;          // Stable Entity ID
 
 using ComponentStorage = void *;
 using ConstructItemFunc = void (*)(void*);
@@ -383,6 +384,11 @@ private:
     size_t m_size;
 };
 
+struct EntityIndex {
+    std::vector<EntityID> index;
+    std::vector<size_t> backptr;
+};
+
 class ComponentManager {
 public:
     using ArchetypeTable = std::unordered_map<
@@ -400,48 +406,12 @@ public:
         meta.size = sizeof(T);
         meta.construct = &construct_object<T>;
         meta.destroy = &destroy_object<T>;
-        // m_component_metadata[T::uuid()] = meta;
         m_component_metadata[UUID<Component>::get<T>()] = meta;
     }
-
-    // IDType create_entity(const ArchetypeFingerprint &fingerprint) {
-    //     Archetype &a = get_archetype(fingerprint);
-    //     // TODO: Construct and return entity id.
-    //     for (auto &&type_id : fingerprint.type_ids) {
-    //         UntypedVector &v = *a.get_component_vector(type_id);
-    //         // TODO: Construct component.
-    //         // v.emplace_back<?>();
-    //     }
-    //     return -1;
-    // }
-
-    // struct EntityBuilder {};
 
     template <typename... Args>
     EntityID create_entity() {
         ArchetypeFingerprint fp { UUID<Component>::get<Args>()... };
-        Archetype &a = get_archetype(fp);
-        EntityIndex idx = a.create_entity();
-        return EntityIDView(idx, 0xffff, a.uuid()).to_u64();
-    }
-
-    // template <typename Arg0, typename... Args>
-    // EntityID create_entity() {
-    //     ArchetypeFingerprint fp;
-    //     return build_entity<Arg0, Args...>(fp);
-    // }
-
-    template <typename Arg0, typename Arg1, typename... Args>
-    EntityID build_entity(ArchetypeFingerprint &fp) {
-        // fp.append(Arg0::uuid());
-        fp.append(UUID<Component>::get<Arg0>());
-        return build_entity<Arg1, Args...>(fp);
-    }
-
-    template <typename Arg0>
-    EntityID build_entity(ArchetypeFingerprint &fp) {
-        // fp.append(Arg0::uuid());
-        fp.append(UUID<Component>::get<Arg0>());
         Archetype &a = get_archetype(fp);
         EntityIndex idx = a.create_entity();
         return EntityIDView(idx, 0xffff, a.uuid()).to_u64();
