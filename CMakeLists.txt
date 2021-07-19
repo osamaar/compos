@@ -2,10 +2,16 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_STANDARD 11)
 project(ecs CXX)
+
+# Library
 add_library(ecs INTERFACE)
 target_include_directories(ecs INTERFACE include)
+# target_sources(ecs INTERFACE include/ecs.h)
+
+# Vendor dependencies
 add_subdirectory(vendor/fmt EXCLUDE_FROM_ALL)
 
+# Binary targets
 set(demo_src src/main.cpp)
 set(bench_src src/benchmark.cpp)
 
