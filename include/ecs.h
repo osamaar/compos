@@ -458,7 +458,7 @@ public:
             return false;
         }
 
-        EntityRecord record = m_entity_table[entity.index];
+        EntityRecord& record = m_entity_table[entity.index];
 
         if (record.generation != entity.generation) {
             return false;
@@ -476,6 +476,7 @@ public:
         record.generation += 1;
         record.index = m_free_head;
         m_free_head = entity.index;
+        return true;
     }
 
     template <typename... Args>
