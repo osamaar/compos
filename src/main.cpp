@@ -25,16 +25,16 @@ int fn() {
 //     arche1.add_component<CompVisual>();
 //     arche1.add_component<CompUserController>();
 
-//     IDType c0 = CompGeometry::uuid();
-//     IDType c1 = CompVisual::uuid();
-//     IDType c2 = CompUserController::uuid();
+//     typeid_t c0 = CompGeometry::uuid();
+//     typeid_t c1 = CompVisual::uuid();
+//     typeid_t c2 = CompUserController::uuid();
 
-//     IDType compcount = UUID<Component>::id_counter;
+//     typeid_t compcount = UUID<Component>::id_counter;
 
-//     IDType a0 = arche.uuid();
-//     IDType a1 = arche1.uuid();
+//     typeid_t a0 = arche.uuid();
+//     typeid_t a1 = arche1.uuid();
 
-//     IDType archecount = UUID<Archetype>::id_counter;
+//     typeid_t archecount = UUID<Archetype>::id_counter;
     
 //     return 0;
 // }
@@ -43,7 +43,7 @@ int fn() {
 // };
 // template <typename T>
 // struct ComponentBase: public Component {
-//     static const IDType uuid() {
+//     static const typeid_t uuid() {
 //         return UUID<Component>::get<T>();
 //     }
 

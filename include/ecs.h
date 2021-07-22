@@ -7,15 +7,35 @@
 #include <unordered_set>
 #include <memory>
 #include <cstdio>
+#include <cstring>
 
 
 namespace ecs {
 
-using IDType = uint32_t;
-using EntityIndex = uint32_t;
-using ArchetypeIndex = uint16_t;
-using EntityLocation = uint64_t;    // Combines ArchetypeIndex & EntityIndex
-using EntityID = uint64_t;          // Stable Entity ID
+using typeid_t = uint16_t;            // For class/object UUID
+using ent_idx_t = uint32_t;
+using ent_gen_t = uint32_t;
+using ent_archidx_t = uint32_t;
+
+static const typeid_t TYPEID_NONE = (ent_idx_t) -1;
+static const ent_idx_t ENT_IDX_NONE = (ent_idx_t) -1;
+static const ent_gen_t ENT_GEN_NONE = (ent_gen_t) -1;
+static const ent_archidx_t ENT_ARCHIDX_NONE = (ent_archidx_t) -1;
+
+struct EntityID {
+    ent_idx_t index;
+    ent_gen_t generation;
+};
+
+struct EntityRecord {
+    ent_idx_t index;
+    ent_archidx_t archetype;
+    ent_gen_t generation;
+};
+
+struct EntityTable {
+    std::vector<EntityRecord> index;
+};
 
 using ComponentStorage = void *;
 using ConstructItemFunc = void (*)(void*);
@@ -23,15 +43,15 @@ using DestroyItemFunc = void (*)(void*);
 
 template <typename IDDomainType>
 struct UUID {
-    static IDType id_counter;
+    static typeid_t id_counter;
 
     template <typename ItemType>
-    static const IDType get() {
-        static IDType id = id_counter++;
+    static const typeid_t get() {
+        static typeid_t id = id_counter++;
         return id;
     }
 
-    static const IDType generate() {
+    static const typeid_t generate() {
         return id_counter++;
     }
 };
@@ -45,7 +65,7 @@ class Component {};
 // }
 
 template<typename T>
-IDType UUID<T>::id_counter = 0;
+typeid_t UUID<T>::id_counter = 0;
 
 struct TypeMetadata {
     size_t size;
@@ -88,6 +108,11 @@ public:
     void *operator [](size_t idx) { return get(idx); }
 
     void *get(size_t idx) {
+        return static_cast<void*>(&m_data[idx*m_element_size]);
+    }
+
+    void *back() {
+        auto idx = m_size - 1;
         return static_cast<void*>(&m_data[idx*m_element_size]);
     }
 
@@ -148,6 +173,11 @@ public:
         m_size--;
     }
 
+    void remove_swap(size_t idx) {
+        std::memcpy(&m_data[idx*m_element_size], back(), m_element_size);
+        pop_back();
+    }
+
     // template <typename DestroyFunc>
     void destroy(size_t idx) {
         // T* elem = static_cast<T*>(&m_data[idx*m_element_size]);
@@ -193,7 +223,7 @@ public:
     //     return make_component_store(T::uuid(), sizeof(T));
     // }
 
-    size_t make_component_store(IDType type_id, const TypeMetadata &metadata) {
+    size_t make_component_store(typeid_t type_id, const TypeMetadata &metadata) {
         const auto &found = m_type_containers.find(type_id);
         if (found == m_type_containers.end()) {
             m_type_containers.emplace(type_id, TypeContainer{});
@@ -210,7 +240,7 @@ public:
     }
 
     // Use indexing to refer to component storage (reallocations happen).
-    UntypedVector *get_component_store(IDType type_id, size_t idx) {
+    UntypedVector *get_component_store(typeid_t type_id, size_t idx) {
         return &m_type_containers[type_id][idx];
     }
     
@@ -221,49 +251,14 @@ public:
     // }
 private:
     using TypeContainer = std::vector<UntypedVector>;
-    std::unordered_map<IDType, TypeContainer> m_type_containers;
+    std::unordered_map<typeid_t, TypeContainer> m_type_containers;
 };
-
-/*
-    High-> |    16b    |    16b     |       32b       | <-Low
-           | archetype | generation |      index      |
-*/
-struct EntityIDView {
-    uint32_t index;
-    uint16_t generation;
-    uint16_t archetype;
-
-    EntityIDView(uint32_t idx, uint16_t gen, uint16_t arch)
-        : index{idx}
-        , generation{gen}
-        , archetype{arch}
-    {
-
-    }
-
-    EntityID to_u64() {
-        return (
-            ((uint64_t) index) |
-            (((uint64_t) generation) << 32) |
-            (((uint64_t) archetype) << 48)
-        );
-    }
-
-    static EntityIDView from_u64(EntityID idx) {
-        return {
-            (uint32_t)(idx & 0xffffffff),
-            (uint16_t)((idx >> 32) & 0xffffull),
-            (uint16_t)((idx >> 48) & 0xffffull)
-        };
-    }
-};
-
 
 // TODO: Do away with std::set to avoid allocations.
 struct ArchetypeFingerprint {
-    std::set<IDType> type_ids;
+    std::set<typeid_t> type_ids;
 
-    ArchetypeFingerprint(std::initializer_list<IDType> ids)
+    ArchetypeFingerprint(std::initializer_list<typeid_t> ids)
         : type_ids{ids}
     { 
 
@@ -291,7 +286,7 @@ struct ArchetypeFingerprint {
     }
 
     void clear() { type_ids.clear(); }
-    void append(IDType id) { type_ids.insert(id); }
+    void append(typeid_t id) { type_ids.insert(id); }
     size_t size() const { return type_ids.size(); }
 };
 
@@ -305,6 +300,7 @@ class Archetype {
 public:
     Archetype(ComponentProvider &provider)
         : m_components{}
+        , m_back_ptr{}
         , m_provider{provider}
         , m_uuid{UUID<Archetype>::generate()}
         , m_fingerprint{}
@@ -312,7 +308,7 @@ public:
     {
     }
 
-    EntityIndex create_entity() {
+    ent_idx_t create_entity(ent_idx_t table_index) {
         // printf("Archetype (%p):\n", this);
         for (auto &&comp: m_components) {
             // UntypedVector &vec = *static_cast<UntypedVector*>(comp.second);
@@ -321,8 +317,8 @@ public:
             vec.emplace_back_default();
         }
 
+        m_back_ptr.push_back(table_index);
         m_size++;
-
         return (m_size - 1);
     }
 
@@ -335,20 +331,41 @@ public:
     //     m_components[T::uuid()] = m_provider.make_component_store<T>();
     // }
 
-    void add_component(IDType type_id, const TypeMetadata &metadata) {
+    void add_component(typeid_t type_id, const TypeMetadata &metadata) {
         auto iter = m_components.find(type_id);
         if (iter != m_components.end()) return;   // already registered
         m_components[type_id] = m_provider.make_component_store(type_id, metadata);
         // TODO: Increase size of new componenet table to match other comps.
     }
 
-    UntypedVector *get_component_vector(IDType type_id) {
+    ent_idx_t remove_swap(ent_idx_t idx) {
+        for (auto &&comp: m_components) {
+            UntypedVector &vec = *m_provider.get_component_store(comp.first, comp.second);
+            vec.emplace_back_default();
+            vec.remove_swap(idx);
+        }
+
+        ent_idx_t result = ENT_IDX_NONE;
+
+        // Only swap if have 2+ elements and not removing last element.
+        if ((m_size > 1) && (idx != (m_size - 1))) {
+            ent_idx_t back_ptr_swapped = m_back_ptr.back();
+            m_back_ptr[idx] = back_ptr_swapped;
+            m_back_ptr.pop_back();
+            result = back_ptr_swapped;
+        }
+
+        m_size--;
+        return result;
+    }
+
+    UntypedVector *get_component_vector(typeid_t type_id) {
         auto iter = m_components.find(type_id);
         if (iter == m_components.end()) return nullptr;
         return m_provider.get_component_store(type_id, iter->second);
     }
 
-    IDType uuid() const {
+    typeid_t uuid() const {
         return m_uuid;
     };
 
@@ -377,16 +394,12 @@ public:
     }
 
 private:
-    std::map<IDType, size_t> m_components;
+    std::map<typeid_t, size_t> m_components;
+    std::vector<ent_idx_t> m_back_ptr;
     ComponentProvider &m_provider;
-    IDType m_uuid;
+    typeid_t m_uuid;
     ArchetypeFingerprint m_fingerprint;
     size_t m_size;
-};
-
-struct EntityIndex {
-    std::vector<EntityID> index;
-    std::vector<size_t> backptr;
 };
 
 class ComponentManager {
@@ -395,9 +408,18 @@ public:
         ArchetypeFingerprint, Archetype,
         ArchetypeFingerprintHasher
     >;
-    using ComponentMetadataTable  = std::unordered_map<IDType, TypeMetadata>;
+    using ComponentMetadataTable  = std::unordered_map<typeid_t, TypeMetadata>;
 
-    ComponentManager() = default;
+    ComponentManager()
+        : m_provider {}
+        , m_archetypes {}
+        , m_component_metadata {}
+        , m_entity_table {}
+        , m_free_head {ENT_IDX_NONE}
+    {
+
+    }
+
     ~ComponentManager() = default;
 
     template <typename T>
@@ -411,10 +433,59 @@ public:
 
     template <typename... Args>
     EntityID create_entity() {
+        ent_idx_t table_idx = m_free_head;
+
+        if (table_idx == ENT_IDX_NONE) {
+            m_entity_table.push_back({});
+            table_idx = m_entity_table.size() - 1;
+            m_entity_table[table_idx].generation = 0;
+        }
+
+
         ArchetypeFingerprint fp { UUID<Component>::get<Args>()... };
         Archetype &a = get_archetype(fp);
-        EntityIndex idx = a.create_entity();
-        return EntityIDView(idx, 0xffff, a.uuid()).to_u64();
+        ent_idx_t idx = a.create_entity(table_idx);
+
+        auto& record = m_entity_table[table_idx];
+        record.index = idx;
+        record.archetype = a.uuid();
+
+        return EntityID{table_idx, record.generation};
+    }
+
+    bool delete_entity(EntityID entity) {
+        if (m_entity_table.size() <= entity.index) {
+            return false;
+        }
+
+        EntityRecord record = m_entity_table[entity.index];
+
+        if (record.generation != entity.generation) {
+            return false;
+        }
+
+        for (auto&& a: m_archetypes) {
+            if (a.second.uuid() == record.archetype) {
+                ent_idx_t back_ptr = a.second.remove_swap(record.index);
+                if (back_ptr == ENT_IDX_NONE) break;    // no swap
+                m_entity_table[back_ptr].index = record.index;
+                break;
+            }
+        }
+
+        record.generation += 1;
+        record.index = m_free_head;
+        m_free_head = entity.index;
+    }
+
+    template <typename... Args>
+    void add_component() {
+
+    }
+
+    template <typename... Args>
+    void remove_component() {
+
     }
 
     // Returns the archetype matching fingerprint. Creates it if needed.
@@ -445,6 +516,8 @@ private:
     ComponentProvider m_provider;
     ArchetypeTable m_archetypes;
     ComponentMetadataTable m_component_metadata;
+    std::vector<EntityRecord> m_entity_table;
+    ent_idx_t m_free_head;
 };
 
 }
