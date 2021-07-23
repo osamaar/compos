@@ -607,6 +607,7 @@ private:
                 break;
             }
         }
+        return nullptr;
     }
 };
 
