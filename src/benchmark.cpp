@@ -32,6 +32,7 @@ int main() {
             CompUserController
         >();
 
+        while(0);
     }
 
     tickcount_t end = timing_getticks();

@@ -192,7 +192,7 @@ public:
         }
     }
 
-
+    size_t element_size() { return m_element_size; }
 private:
     static const size_t INITIAL_CAPACITY = 1;
     size_t m_element_size;
@@ -287,6 +287,7 @@ struct ArchetypeFingerprint {
 
     void clear() { type_ids.clear(); }
     void append(typeid_t id) { type_ids.insert(id); }
+    void append(std::initializer_list<typeid_t> ids) { type_ids.insert(ids); }
     size_t size() const { return type_ids.size(); }
 };
 
@@ -441,7 +442,6 @@ public:
             m_entity_table[table_idx].generation = 0;
         }
 
-
         ArchetypeFingerprint fp { UUID<Component>::get<Args>()... };
         Archetype &a = get_archetype(fp);
         ent_idx_t idx = a.create_entity(table_idx);
@@ -466,9 +466,7 @@ public:
 
         for (auto&& a: m_archetypes) {
             if (a.second.uuid() == record.archetype) {
-                ent_idx_t back_ptr = a.second.remove_swap(record.index);
-                if (back_ptr == ENT_IDX_NONE) break;    // no swap
-                m_entity_table[back_ptr].index = record.index;
+                remove_entity_data_from_archetype(a.second, record.index);
                 break;
             }
         }
@@ -480,13 +478,83 @@ public:
     }
 
     template <typename... Args>
-    void add_component() {
+    void add_component(EntityID id) {
+        if (m_entity_table[id.index].generation != id.generation) return;
+        auto& record = m_entity_table[id.index];
 
+        // Find old archetype.
+        Archetype& a_old = *find_archetype(record.archetype);
+
+        // Find old and new archetype fingerprints.
+        ArchetypeFingerprint& fp_old = a_old->fingerprint();
+        ArchetypeFingerprint fp_new{fp_old};
+        fp_new.append(UUID<Component>::get<Args>()...);
+
+        Archetype &a_new = get_archetype(fp_new);
+        ent_idx_t idx_old = record.index;
+        
+        // Create new.
+        ent_idx_t idx_new = a_new.create_entity(id.index);
+
+        // Copy old data.
+        for (auto&& type_id: fp_old->type_ids) {
+            auto v_old = a_old.get_component_vector(type_id);
+            auto v_new = a_new.get_component_vector(type_id);
+            auto elem_old = v_old->get(idx_old);
+            auto elem_new = v_old->get(idx_new);
+            memcpy(elem_new, elem_old, v_old->element_size());
+        }
+
+        // Point to new data.
+        record.archetype = a_new.uuid();
+        record.index = idx_new;
+
+        // Remove old.
+        remove_entity_data_from_archetype(a_old, idx_old);
     }
 
     template <typename... Args>
-    void remove_component() {
+    void remove_component(EntityID id) {
+        remove_component(id, {UUID<Component>::get<Args>()...});
+    }
 
+    void remove_component(EntityID id, std::initializer_list<typeid_t> ids) {
+        if (m_entity_table[id.index].generation != id.generation) return;
+        auto& record = m_entity_table[id.index];
+
+        // Find old archetype.
+        Archetype& a_old = *find_archetype(record.archetype);
+
+        // Find old and new archetype fingerprints.
+        const ArchetypeFingerprint& fp_old = a_old.fingerprint();
+        ArchetypeFingerprint fp_new{fp_old};
+        fp_new.append(ids);
+
+        for (auto&& id: ids) {
+            fp_new.type_ids.erase(id);
+        }
+
+        Archetype &a_new = get_archetype(fp_new);
+        ent_idx_t idx_old = record.index;
+        
+        // Create new.
+        ent_idx_t idx_new = a_new.create_entity(id.index);
+
+        // Copy old data.
+        for (auto&& type_id: fp_new.type_ids) {
+            auto v_old = a_old.get_component_vector(type_id);
+            auto v_new = a_new.get_component_vector(type_id);
+            auto elem_old = v_old->get(idx_old);
+            auto elem_new = v_old->get(idx_new);
+            memcpy(elem_new, elem_old, v_old->element_size());
+        }
+
+        // Point to new data.
+        record.archetype = a_new.uuid();
+        record.index = idx_new;
+
+        // Remove old.
+        remove_entity_data_from_archetype(a_old, idx_old);
     }
 
     // Returns the archetype matching fingerprint. Creates it if needed.
@@ -519,6 +587,21 @@ private:
     ComponentMetadataTable m_component_metadata;
     std::vector<EntityRecord> m_entity_table;
     ent_idx_t m_free_head;
+
+    void remove_entity_data_from_archetype(Archetype &a, ent_idx_t idx) {
+        ent_idx_t back_ptr = a.remove_swap(idx);
+        if (back_ptr != ENT_IDX_NONE) return;       // no swap
+        m_entity_table[back_ptr].index = idx;
+    }
+
+    Archetype* find_archetype(ent_archidx_t idx) {
+        for (auto&& a: m_archetypes) {
+            if (a.second.uuid() == idx) {
+                return &a.second;
+                break;
+            }
+        }
+    }
 };
 
 }
