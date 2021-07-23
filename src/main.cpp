@@ -84,7 +84,8 @@ int main() {
     // auto ent3 = cm.create_entity<CompGeometry, CompVisual>();
     // auto ent4 = cm.create_entity<CompGeometry, CompVisual>();
 
-    bool r = cm.delete_entity(ent0);
+    // bool r = cm.delete_entity(ent0);
+    cm.remove_component<CompVisual>(ent0);
     EntityID ent00 = cm.create_entity<CompGeometry, CompVisual>();
     bool rr = cm.delete_entity(ent00);
 

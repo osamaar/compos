@@ -513,9 +513,15 @@ public:
         remove_entity_data_from_archetype(a_old, idx_old);
     }
 
-    template <typename... Args>
+    template <typename Arg0, typename... Args>
     void remove_component(EntityID id) {
-        remove_component(id, {UUID<Component>::get<Args>()...});
+        remove_component(
+            id,
+            {
+                UUID<Component>::get<Arg0>(),
+                UUID<Component>::get<Args>()...,
+            }
+        );
     }
 
     void remove_component(EntityID id, std::initializer_list<typeid_t> ids) {
@@ -590,7 +596,7 @@ private:
 
     void remove_entity_data_from_archetype(Archetype &a, ent_idx_t idx) {
         ent_idx_t back_ptr = a.remove_swap(idx);
-        if (back_ptr != ENT_IDX_NONE) return;       // no swap
+        if (back_ptr == ENT_IDX_NONE) return;       // no swap
         m_entity_table[back_ptr].index = idx;
     }
 
