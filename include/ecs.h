@@ -563,21 +563,6 @@ public:
         remove_entity_data_from_archetype(a_old, idx_old);
     }
 
-    // Returns the archetype matching fingerprint. Creates it if needed.
-    Archetype &get_archetype(const ArchetypeFingerprint &fingerprint) {
-        auto found = m_archetypes.find(fingerprint);
-        if (found != m_archetypes.end()) return found->second;
-
-        m_archetypes.emplace(fingerprint, m_provider);
-        auto &a = m_archetypes.at(fingerprint);
-
-        for (auto &&type_id: fingerprint.type_ids) {
-            a.add_component(type_id, m_component_metadata[type_id]);
-        }
-
-        return a;
-    }
-
     const ComponentProvider&
     component_provider() const { return m_provider; }
 
@@ -593,6 +578,21 @@ private:
     ComponentMetadataTable m_component_metadata;
     std::vector<EntityRecord> m_entity_table;
     ent_idx_t m_free_head;
+
+    // Returns the archetype matching fingerprint. Creates it if needed.
+    Archetype &get_archetype(const ArchetypeFingerprint &fingerprint) {
+        auto found = m_archetypes.find(fingerprint);
+        if (found != m_archetypes.end()) return found->second;
+
+        m_archetypes.emplace(fingerprint, m_provider);
+        auto &a = m_archetypes.at(fingerprint);
+
+        for (auto &&type_id: fingerprint.type_ids) {
+            a.add_component(type_id, m_component_metadata[type_id]);
+        }
+
+        return a;
+    }
 
     void remove_entity_data_from_archetype(Archetype &a, ent_idx_t idx) {
         ent_idx_t back_ptr = a.remove_swap(idx);
