@@ -26,3 +26,9 @@ add_executable(benchmark ${bench_src})
 target_link_libraries(benchmark ecs)
 target_link_libraries(benchmark fmt::fmt)
 target_link_libraries(benchmark crash::crash)
+
+target_compile_options(
+    ecs INTERFACE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Werror>
+)
