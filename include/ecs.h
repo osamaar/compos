@@ -425,6 +425,7 @@ public:
         , m_component_metadata {}
         , m_entity_table {}
         , m_free_head {ENT_IDX_NONE}
+        , m_size {0}
     {
 
     }
@@ -458,6 +459,7 @@ public:
         record.index = idx;
         record.archetype = a.uuid();
 
+        m_size++;
         return EntityID{table_idx, record.generation};
     }
 
@@ -486,6 +488,7 @@ public:
         record.generation += 1;
         record.index = m_free_head;
         m_free_head = entity.index;
+        m_size--;
         return true;
     }
 
@@ -593,12 +596,15 @@ public:
     const ComponentMetadataTable&
     component_metadata() const { return m_component_metadata; }
 
+    size_t size() { return m_size; }
+
 private:
     ComponentProvider m_provider;
     ArchetypeTable m_archetypes;
     ComponentMetadataTable m_component_metadata;
     std::vector<EntityRecord> m_entity_table;
     ent_idx_t m_free_head;
+    size_t m_size;
 
     // Returns the archetype matching fingerprint. Creates it if needed.
     Archetype &find_or_create_archetype(const ArchetypeFingerprint &fingerprint) {
