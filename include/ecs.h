@@ -17,7 +17,7 @@ using ent_idx_t = uint32_t;
 using ent_gen_t = uint32_t;
 using ent_archidx_t = uint32_t;
 
-static const typeid_t TYPEID_NONE = (ent_idx_t) -1;
+static const typeid_t TYPEID_NONE = (typeid_t) -1;
 static const ent_idx_t ENT_IDX_NONE = (ent_idx_t) -1;
 static const ent_gen_t ENT_GEN_NONE = (ent_gen_t) -1;
 static const ent_archidx_t ENT_ARCHIDX_NONE = (ent_archidx_t) -1;
@@ -408,7 +408,7 @@ private:
     ComponentProvider &m_provider;
     typeid_t m_uuid;
     ArchetypeFingerprint m_fingerprint;
-    size_t m_size;
+    ent_idx_t m_size;
 };
 
 class ComponentManager {
@@ -447,7 +447,7 @@ public:
 
         if (table_idx == ENT_IDX_NONE) {
             m_entity_table.push_back({});
-            table_idx = m_entity_table.size() - 1;
+            table_idx = (ent_idx_t)(m_entity_table.size() - 1);
             m_entity_table[table_idx].generation = 0;
         }
 
@@ -539,9 +539,9 @@ public:
         );
     }
 
-    bool remove_component(EntityID id, std::initializer_list<typeid_t> ids) {
-        if (!is_entity_id_valid(id)) return false;
-        auto& record = m_entity_table[id.index];
+    bool remove_component(EntityID eid, std::initializer_list<typeid_t> tids) {
+        if (!is_entity_id_valid(eid)) return false;
+        auto& record = m_entity_table[eid.index];
 
         // Find old archetype.
         Archetype& a_old = *find_archetype(record.archetype);
@@ -549,24 +549,24 @@ public:
         // Find old and new archetype fingerprints.
         const ArchetypeFingerprint& fp_old = a_old.fingerprint();
         ArchetypeFingerprint fp_new{fp_old};
-        fp_new.append(ids);
+        fp_new.append(tids);
 
-        for (auto&& id: ids) {
-            fp_new.type_ids.erase(id);
+        for (auto&& tid: tids) {
+            fp_new.type_ids.erase(tid);
         }
 
         Archetype &a_new = find_or_create_archetype(fp_new);
         ent_idx_t idx_old = record.index;
         
         // Create new.
-        ent_idx_t idx_new = a_new.create_entity(id.index);
+        ent_idx_t idx_new = a_new.create_entity(eid.index);
 
         // Copy old data.
         for (auto&& type_id: fp_new.type_ids) {
             auto v_old = a_old.get_component_vector(type_id);
             auto v_new = a_new.get_component_vector(type_id);
             auto elem_old = v_old->get(idx_old);
-            auto elem_new = v_old->get(idx_new);
+            auto elem_new = v_new->get(idx_new);
             memcpy(elem_new, elem_old, v_old->element_size());
         }
 

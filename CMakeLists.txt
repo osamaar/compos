@@ -27,8 +27,12 @@ target_link_libraries(benchmark ecs)
 target_link_libraries(benchmark fmt::fmt)
 target_link_libraries(benchmark crash::crash)
 
-target_compile_options(
-    ecs INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Werror>
-)
+function(target_enable_warnings target scope)
+    target_compile_options(
+        ${target} ${scope}
+        $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -pedantic -Werror>
+    )
+endfunction()
+
+target_enable_warnings(benchmark PRIVATE)

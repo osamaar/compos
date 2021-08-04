@@ -3,6 +3,8 @@
 #include <vector>
 #include <typeindex>
 
+#define UNUSED(expr) do { (void)(expr); } while (0)
+
 int I = 0;
 
 int fn() {
@@ -88,6 +90,7 @@ int main() {
     cm.remove_component<CompVisual>(ent0);
     EntityID ent00 = cm.create_entity<CompGeometry, CompVisual>();
     bool rr = cm.delete_entity(ent00);
+    UNUSED(rr);
 
     return 0;
 }
