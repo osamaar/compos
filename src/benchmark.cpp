@@ -1,4 +1,4 @@
-#include "ecs.h"
+#include "ecs/ecs.h"
 #include "ecs_fmt.h"
 #include "timing.h"
 // #include <cstdio>

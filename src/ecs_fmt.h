@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ecs.h"
+#include "ecs/ecs.h"
 #include <fmt/format.h>
 
 template <>

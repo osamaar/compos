@@ -1,4 +1,4 @@
-#include "ecs.h"
+#include "ecs/ecs.h"
 #include <assert.h>
 #include <vector>
 #include <typeindex>
