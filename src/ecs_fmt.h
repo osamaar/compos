@@ -4,15 +4,15 @@
 #include <fmt/format.h>
 
 template <>
-struct fmt::formatter<ecs::ComponentManager> : fmt::formatter<fmt::string_view> {
+struct fmt::formatter<ecs::EntityManager> : fmt::formatter<fmt::string_view> {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(const ecs::ComponentManager &cm, FormatContext &ctx) -> decltype(ctx.out()) {
+    auto format(const ecs::EntityManager &cm, FormatContext &ctx) -> decltype(ctx.out()) {
         string_view name = "unknown";
         fmt::format_to(ctx.out(), "<");
         fmt::format_to(
             ctx.out(),
-            "ComponentManager: {} Archetypes ( ", cm.archetype_table().size()
+            "EntityManager: {} Archetypes ( ", cm.archetype_table().size()
         );
         
         for (auto&& a : cm.archetype_table()) {

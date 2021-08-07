@@ -26,7 +26,7 @@ struct EntityTable {
     std::vector<EntityRecord> index;
 };
 
-class ComponentManager {
+class EntityManager {
 public:
     using ArchetypeTable = std::unordered_map<
         ArchetypeFingerprint, Archetype,
@@ -34,7 +34,7 @@ public:
     >;
     using ComponentMetadataTable  = std::unordered_map<typeid_t, UntypedVector::TypeMetadata>;
 
-    ComponentManager()
+    EntityManager()
         : m_provider {}
         , m_archetypes {}
         , m_component_metadata {}
@@ -45,7 +45,7 @@ public:
 
     }
 
-    ~ComponentManager() = default;
+    ~EntityManager() = default;
 
     template <typename T>
     void register_component() {

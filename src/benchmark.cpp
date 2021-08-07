@@ -13,11 +13,11 @@ struct CompGeometry { int x; int y; };
 struct CompVisual { };
 struct CompUserController { };
 
-ecs::EntityID e0(ecs::ComponentManager& cm) { return cm.create_entity<CompGeometry, CompVisual>(); }
-ecs::EntityID e1(ecs::ComponentManager& cm) { return cm.create_entity<CompGeometry, CompVisual, CompUserController>(); }
-ecs::EntityID e2(ecs::ComponentManager& cm) { return cm.create_entity<CompGeometry>(); }
-ecs::EntityID e3(ecs::ComponentManager& cm) { return cm.create_entity<CompGeometry, CompUserController>(); }
-ecs::EntityID e4(ecs::ComponentManager& cm) { return cm.create_entity<CompVisual, CompUserController>(); }
+ecs::EntityID e0(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry, CompVisual>(); }
+ecs::EntityID e1(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry, CompVisual, CompUserController>(); }
+ecs::EntityID e2(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry>(); }
+ecs::EntityID e3(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry, CompUserController>(); }
+ecs::EntityID e4(ecs::EntityManager& cm) { return cm.create_entity<CompVisual, CompUserController>(); }
 
 int main() {
     using namespace ecs;
@@ -26,7 +26,7 @@ int main() {
     int64_t t;
 
     CrashState rstate = crash_seed(SEED);
-    typedef EntityID(*EFunc)(ComponentManager&);
+    typedef EntityID(*EFunc)(EntityManager&);
 
     EFunc entity_func[] = {e0, e1, e2, e3, e4};
     std::vector<EntityID> entities;
@@ -34,7 +34,7 @@ int main() {
 
     start = timing_getticks();
 
-    ComponentManager cm;
+    EntityManager cm;
     cm.register_component<CompGeometry>();
     cm.register_component<CompVisual>();
     cm.register_component<CompUserController>();
