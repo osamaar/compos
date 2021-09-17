@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iterator>
+#include <cstddef>
 #include <vector>
 #include <unordered_map>
 #include "const.h"
@@ -33,6 +35,15 @@ public:
         ArchetypeFingerprintHasher
     >;
     using ComponentMetadataTable  = std::unordered_map<typeid_t, UntypedVector::TypeMetadata>;
+
+    template <typename T>
+    struct Iterator {
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = T;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+    };
 
     EntityManager()
         : m_provider {}
