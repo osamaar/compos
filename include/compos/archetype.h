@@ -9,7 +9,7 @@
 #include <map>
 #include <set>
 
-namespace ecs {
+namespace compos {
 // TODO: Do away with std::set to avoid allocations.
 struct ArchetypeFingerprint {
     std::set<typeid_t> type_ids;
@@ -157,4 +157,4 @@ private:
     ent_idx_t m_size;
 };
 
-}   //namespace ecs
+}   //namespace compos

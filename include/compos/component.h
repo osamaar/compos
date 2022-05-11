@@ -5,7 +5,7 @@
 #include "untyped_vector.h"
 #include <unordered_map>
 
-namespace ecs {
+namespace compos {
 
 // A marker class to use for UUID counting.
 class Component {};
@@ -39,4 +39,4 @@ private:
     std::unordered_map<typeid_t, TypeContainer> m_type_containers;
 };
 
-}   // ecs namespace
+}   // compos namespace

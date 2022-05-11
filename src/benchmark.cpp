@@ -13,14 +13,14 @@ struct CompGeometry { int x; int y; };
 struct CompVisual { };
 struct CompUserController { };
 
-ecs::EntityID e0(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry, CompVisual>(); }
-ecs::EntityID e1(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry, CompVisual, CompUserController>(); }
-ecs::EntityID e2(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry>(); }
-ecs::EntityID e3(ecs::EntityManager& cm) { return cm.create_entity<CompGeometry, CompUserController>(); }
-ecs::EntityID e4(ecs::EntityManager& cm) { return cm.create_entity<CompVisual, CompUserController>(); }
+compos::EntityID e0(compos::EntityManager& cm) { return cm.create_entity<CompGeometry, CompVisual>(); }
+compos::EntityID e1(compos::EntityManager& cm) { return cm.create_entity<CompGeometry, CompVisual, CompUserController>(); }
+compos::EntityID e2(compos::EntityManager& cm) { return cm.create_entity<CompGeometry>(); }
+compos::EntityID e3(compos::EntityManager& cm) { return cm.create_entity<CompGeometry, CompUserController>(); }
+compos::EntityID e4(compos::EntityManager& cm) { return cm.create_entity<CompVisual, CompUserController>(); }
 
 int main() {
-    using namespace ecs;
+    using namespace compos;
 
     tickcount_t start, end;
     int64_t t;

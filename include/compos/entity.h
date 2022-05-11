@@ -11,7 +11,7 @@
 #include "component.h"
 #include "untyped_vector.h"
 
-namespace ecs {
+namespace compos {
 
 struct EntityID {
     ent_idx_t index;

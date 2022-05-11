@@ -2,7 +2,7 @@
 
 #include "type_alias.h"
 
-namespace ecs {
+namespace compos {
 
 template <typename IDDomainType>
 struct UUID {
@@ -22,4 +22,4 @@ struct UUID {
 template<typename T>
 typeid_t UUID<T>::id_counter = 0;
 
-}   // namespace ecs
+}   // namespace compos

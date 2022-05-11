@@ -4,10 +4,10 @@
 #include <fmt/format.h>
 
 template <>
-struct fmt::formatter<ecs::EntityManager> : fmt::formatter<fmt::string_view> {
+struct fmt::formatter<compos::EntityManager> : fmt::formatter<fmt::string_view> {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(const ecs::EntityManager &cm, FormatContext &ctx) -> decltype(ctx.out()) {
+    auto format(const compos::EntityManager &cm, FormatContext &ctx) -> decltype(ctx.out()) {
         string_view name = "unknown";
         fmt::format_to(ctx.out(), "<");
         fmt::format_to(
@@ -25,10 +25,10 @@ struct fmt::formatter<ecs::EntityManager> : fmt::formatter<fmt::string_view> {
 };
 
 template <>
-struct fmt::formatter<ecs::Archetype> : fmt::formatter<fmt::string_view> {
+struct fmt::formatter<compos::Archetype> : fmt::formatter<fmt::string_view> {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
-    auto format(const ecs::Archetype &a, FormatContext &ctx) -> decltype(ctx.out()) {
+    auto format(const compos::Archetype &a, FormatContext &ctx) -> decltype(ctx.out()) {
         string_view name = "unknown";
         fmt::format_to(ctx.out(), "<");
         fmt::format_to(ctx.out(), "Archetype {}: {} Components ( ", a.uuid(), a.fingerprint().size());

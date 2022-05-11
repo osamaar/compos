@@ -17,7 +17,7 @@ struct CompUserController {
 };
 
 int main() {
-    using namespace ecs;
+    using namespace compos;
 
     EntityManager cm;
     cm.register_component<CompGeometry>();
