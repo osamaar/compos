@@ -3,6 +3,9 @@
 #include <limits.h>
 #include <stdint.h>
 
+// This is based on the method described in Squirrel Eiserloh's talk at the 2017
+// GDC: Math for Game Programmers.
+
 // #define P 258241
 // The base bit-noise constants were crafted to have distinctive and interesting
 // bits, and have so far produced excellent experimental test results.
